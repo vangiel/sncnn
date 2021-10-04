@@ -12,6 +12,8 @@ import argparse
 import torch
 import time
 
+from dataloader import ImageDataset
+
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--model", type=str, required=True,
@@ -43,6 +45,8 @@ numValSamples = int(len(trainData) * VAL_SPLIT)
 (trainData, valData) = random_split(trainData,
                                     [numTrainSamples, numValSamples],
                                     generator=torch.Generator().manual_seed(42))
+
+data = ImageDataset("images_dataset", "VGG16", mode="train")
 
 # initialize the train, validation, and test data loaders
 trainDataLoader = DataLoader(trainData, shuffle=True,
