@@ -1,4 +1,5 @@
-from nets import LeNet
+import sys
+
 from sklearn.metrics import classification_report
 from torch.utils.data import random_split
 from torch.utils.data import DataLoader
@@ -12,14 +13,16 @@ import argparse
 import torch
 import time
 
+from nets.VGG16 import VGG16
+from nets.LeNet import LeNet
 from dataloader import ImageDataset
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--model", type=str, required=True,
-                help="path to output trained model")
-ap.add_argument("-p", "--plot", type=str, required=True,
-                help="path to output loss/accuracy plot")
+                help="name of the model to use (VGG16, LeNet")
+ap.add_argument("-p", "--path", type=str, required=False, default="model/",
+                help="path to output the results")
 args = vars(ap.parse_args())
 
 # define training hyperparameters
@@ -28,41 +31,52 @@ BATCH_SIZE = 64
 EPOCHS = 10
 # define the train and val splits
 TRAIN_SPLIT = 0.75
-VAL_SPLIT = 1 - TRAIN_SPLIT
+VAL_SPLIT = (1 - TRAIN_SPLIT) / 2
+TEST_SPLIT = (1 - TRAIN_SPLIT) / 2
 # set the device we will be using to train the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# load the KMNIST dataset
-print("[INFO] loading the KMNIST dataset...")
-trainData = KMNIST(root="data", train=True, download=True,
-                   transform=ToTensor())
-testData = KMNIST(root="data", train=False, download=True,
-                  transform=ToTensor())
-# calculate the train/validation split
-print("[INFO] generating the train/validation split...")
-numTrainSamples = int(len(trainData) * TRAIN_SPLIT)
-numValSamples = int(len(trainData) * VAL_SPLIT)
-(trainData, valData) = random_split(trainData,
-                                    [numTrainSamples, numValSamples],
-                                    generator=torch.Generator().manual_seed(42))
+# load the dataset
+print("[INFO] loading the dataset...")
+data = ImageDataset("images_dataset", args['model'], "train", transform=None, target_transform=None, debug=False)
+first_image, first_label = data[0]
 
-data = ImageDataset("images_dataset", "VGG16", mode="train")
+dim_input = first_image.shape
+dim_label = first_label.shape
+
+# calculate the train/validation split
+print("[INFO] generating the train/validation/test split...")
+numTrainSamples = int(len(data) * TRAIN_SPLIT)
+numValSamples = int(len(data) * VAL_SPLIT) + 1
+numTestSamples = int(len(data) * TEST_SPLIT) + 1
+(trainData, valData, testData) = random_split(data,
+                                              [numTrainSamples, numValSamples, numTestSamples],
+                                              generator=torch.Generator().manual_seed(42))
 
 # initialize the train, validation, and test data loaders
-trainDataLoader = DataLoader(trainData, shuffle=True,
-                             batch_size=BATCH_SIZE)
+trainDataLoader = DataLoader(trainData, shuffle=True, batch_size=BATCH_SIZE)
 valDataLoader = DataLoader(valData, batch_size=BATCH_SIZE)
 testDataLoader = DataLoader(testData, batch_size=BATCH_SIZE)
+
 # calculate steps per epoch for training and validation set
 trainSteps = len(trainDataLoader.dataset) // BATCH_SIZE
 valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 
 if __name__ == "__main__":
     # initialize the LeNet model
-    print("[INFO] initializing the LeNet model...")
-    model = LeNet(
-        numChannels=1,
-        classes=len(trainData.dataset.classes)).to(device)
+    print("[INFO] initializing the", args['model'], "model...")
+
+    if args['model'] == 'LeNet':
+        model = LeNet(
+            numChannels=dim_input[2],
+            label_dim=dim_label,
+            n_trans_layers=2)
+    elif args['model'] == 'VGG16':
+        model = VGG16
+    else:
+        print("Introduce a valid model name.")
+        sys.exit(0)
+
     # initialize our optimizer and loss function
     opt = Adam(model.parameters(), lr=INIT_LR)
     lossFn = nn.NLLLoss()

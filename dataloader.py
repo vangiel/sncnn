@@ -44,7 +44,7 @@ class ImageDataset(Dataset):
             self.img_labels.append(cv2.imread(str(file), 0))
 
             video_path = self.img_dir + "/" + str(file).split("/")[1].split(".")[0].split("_")[0] + ".mp4"
-            # print("Loading ---> ", video_path)
+            print("Loading ---> ", video_path)
             video = cv2.VideoCapture(video_path)
             fps = video.get(cv2.CAP_PROP_FPS)
             if not video.isOpened():
@@ -59,6 +59,7 @@ class ImageDataset(Dataset):
                 else:
                     break
             video.release()
+            print(frames)
 
             final_images = [frames[-1]]
             last_t = timestamps[-1]

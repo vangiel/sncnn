@@ -8,7 +8,8 @@ vgg16_model = vgg16()
 object_methods = [method_name for method_name in dir(vgg16_model)
                   if callable(getattr(vgg16_model, method_name))]
 
-print(object_methods)
+# print(object_methods)
+VGG16 = vgg16_model
 
 
 # vgg16_model.classifier = vgg16_model.classifier[:-1]
