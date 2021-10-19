@@ -2,6 +2,7 @@ import sys
 import os
 
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 import cv2
 from pathlib import Path
@@ -9,7 +10,7 @@ from pathlib import Path
 import h5py
 
 
-LIMIT = 20000
+LIMIT = 20
 
 
 class ImageDataset(Dataset):
@@ -44,7 +45,7 @@ class ImageDataset(Dataset):
             self.img_labels.append(cv2.imread(str(file), 0))
 
             video_path = self.img_dir + "/" + str(file).split("/")[1].split(".")[0].split("_")[0] + ".mp4"
-            print("Loading ---> ", video_path)
+            # print("Loading ---> ", video_path)
             video = cv2.VideoCapture(video_path)
             fps = video.get(cv2.CAP_PROP_FPS)
             if not video.isOpened():
@@ -59,7 +60,6 @@ class ImageDataset(Dataset):
                 else:
                     break
             video.release()
-            print(frames)
 
             final_images = [frames[-1]]
             last_t = timestamps[-1]
@@ -82,6 +82,7 @@ class ImageDataset(Dataset):
                 final_images[i] = cv2.resize(final_images[i], dims, interpolation=cv2.INTER_AREA)
 
             image = np.concatenate(final_images, axis=2)
+            image = np.transpose(image, (2, 0, 1))
             self.images.append(image)
 
     def __len__(self):
@@ -106,7 +107,6 @@ class ImageDataset(Dataset):
 
         # Generate paths
         dataset_path = self.path_save + "/" + self.get_dataset_name()
-        print(dataset_path)
         print("Saving dataset into: ", dataset_path)
         os.makedirs(self.path_save, exist_ok=True)
 

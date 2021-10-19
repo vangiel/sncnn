@@ -4,7 +4,6 @@ from sklearn.metrics import classification_report
 from torch.utils.data import random_split
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
-from torchvision.datasets import KMNIST
 from torch.optim import Adam
 from torch import nn
 import matplotlib.pyplot as plt
@@ -31,8 +30,7 @@ BATCH_SIZE = 64
 EPOCHS = 10
 # define the train and val splits
 TRAIN_SPLIT = 0.75
-VAL_SPLIT = (1 - TRAIN_SPLIT) / 2
-TEST_SPLIT = (1 - TRAIN_SPLIT) / 2
+VAL_SPLIT = (1 - TRAIN_SPLIT)
 # set the device we will be using to train the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -47,8 +45,8 @@ dim_label = first_label.shape
 # calculate the train/validation split
 print("[INFO] generating the train/validation/test split...")
 numTrainSamples = int(len(data) * TRAIN_SPLIT)
-numValSamples = int(len(data) * VAL_SPLIT) + 1
-numTestSamples = int(len(data) * TEST_SPLIT) + 1
+numValSamples = int(len(data) * VAL_SPLIT / 2)
+numTestSamples = int(len(data) - numTrainSamples - numValSamples)
 (trainData, valData, testData) = random_split(data,
                                               [numTrainSamples, numValSamples, numTestSamples],
                                               generator=torch.Generator().manual_seed(42))
@@ -68,9 +66,9 @@ if __name__ == "__main__":
 
     if args['model'] == 'LeNet':
         model = LeNet(
-            numChannels=dim_input[2],
+            numChannels=dim_input[0],
             label_dim=dim_label,
-            n_trans_layers=2)
+            n_trans_layers=3).to(device)
     elif args['model'] == 'VGG16':
         model = VGG16
     else:
@@ -105,7 +103,7 @@ if __name__ == "__main__":
         # loop over the training set
         for (x, y) in trainDataLoader:
             # send the input to the device
-            (x, y) = (x.to(device), y.to(device))
+            (x, y) = (x.type(torch.FloatTensor).to(device), y.type(torch.FloatTensor).to(device))
             # perform a forward pass and calculate the training loss
             pred = model(x)
             loss = lossFn(pred, y)
@@ -127,7 +125,7 @@ if __name__ == "__main__":
             # loop over the validation set
             for (x, y) in valDataLoader:
                 # send the input to the device
-                (x, y) = (x.to(device), y.to(device))
+                (x, y) = (x.type(torch.FloatTensor).to(device), y.type(torch.FloatTensor).to(device))
                 # make the predictions and calculate the validation loss
                 pred = model(x)
                 totalValLoss += lossFn(pred, y)
@@ -168,7 +166,7 @@ if __name__ == "__main__":
         # loop over the test set
         for (x, y) in testDataLoader:
             # send the input to the device
-            x = x.to(device)
+            x = x.type(torch.FloatTensor).to(device)
             # make the predictions and add them to the list
             pred = model(x)
             preds.extend(pred.argmax(axis=1).cpu().numpy())

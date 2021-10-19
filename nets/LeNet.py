@@ -41,22 +41,22 @@ class LeNet(Module):
 
         # Transpose layers
         if self.transpose_layers == 1:
-            self.t_conv1 = ConvTranspose2d(in_channels=self.num_channels, out_channels=1, kernel_size=7, stride=3,
+            self.t_conv1 = ConvTranspose2d(in_channels=50, out_channels=1, kernel_size=7, stride=3,
                                            padding=2)
         elif self.transpose_layers == 2:
-            self.t_conv1 = ConvTranspose2d(in_channels=self.num_channels, out_channels=self.num_channels, kernel_size=5,
+            self.t_conv1 = ConvTranspose2d(in_channels=50, out_channels=25, kernel_size=5,
                                            stride=2, padding=1)
-            self.bnrorm1 = BatchNorm2d(self.num_channels)
-            self.t_conv3 = ConvTranspose2d(in_channels=self.num_channels, out_channels=1, kernel_size=3, stride=2,
+            self.bnrorm1 = BatchNorm2d(25)
+            self.t_conv3 = ConvTranspose2d(in_channels=25, out_channels=1, kernel_size=3, stride=2,
                                            padding=1)
         elif self.transpose_layers == 3:
-            self.t_conv1 = ConvTranspose2d(in_channels=self.num_channels, out_channels=self.num_channels,
-                                           kernel_size=3, padding=1)
-            self.bnorm1 = BatchNorm2d(self.num_channels)
-            self.t_conv2 = ConvTranspose2d(in_channels=self.num_channels, out_channels=self.num_channels,
-                                           kernel_size=3, padding=1)
-            self.bnorm2 = BatchNorm2d(self.num_channels)
-            self.t_conv3 = ConvTranspose2d(in_channels=self.num_channels, out_channels=1, kernel_size=3, padding=1)
+            self.t_conv1 = ConvTranspose2d(in_channels=50, out_channels=30, stride=3,
+                                           kernel_size=5, padding=1)
+            self.bnorm1 = BatchNorm2d(30)
+            self.t_conv2 = ConvTranspose2d(in_channels=30, out_channels=15, stride=3,
+                                           kernel_size=7, padding=1)
+            self.bnorm2 = BatchNorm2d(15)
+            self.t_conv3 = ConvTranspose2d(in_channels=15, out_channels=1, kernel_size=10, stride=2, padding=1)
         else:
             print("Introduce a valid number of transpose CNN layers")
 
@@ -71,8 +71,6 @@ class LeNet(Module):
         x = self.conv2(x)
         x = self.relu2(x)
         x = self.maxpool2(x)
-        print(x.shape)
-        sys.exit(0)
         # flatten the output from the previous layer and pass it
         # through our only set of FC => RELU layers
         # x = flatten(x, 1)
