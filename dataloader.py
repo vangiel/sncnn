@@ -14,13 +14,13 @@ LIMIT = 20
 
 
 class ImageDataset(Dataset):
-    def __init__(self, img_dir, net, mode="train", transform=None, target_transform=None, debug=False):
+    def __init__(self, img_dir, img_size, mode="train", transform=None, target_transform=None, debug=False):
         self.img_labels = []
         self.images = []
         self.img_dir = img_dir
         self.transform = transform
         self.target_transform = target_transform
-        self.net = net
+        self.image_size = img_size
         self.debug = debug
         self.path_save = "cache"
         self.mode = mode
@@ -42,7 +42,9 @@ class ImageDataset(Dataset):
                 print(index)
             index += 1
 
-            self.img_labels.append(cv2.imread(str(file), 0))
+            label_image = cv2.imread(str(file), 0)
+            label_image = cv2.resize(label_image, self.image_size, interpolation=cv2.INTER_AREA)
+            self.img_labels.append(label_image)
 
             video_path = self.img_dir + "/" + str(file).split("/")[1].split(".")[0].split("_")[0] + ".mp4"
             # print("Loading ---> ", video_path)
@@ -70,19 +72,11 @@ class ImageDataset(Dataset):
                     final_images.append(frame)
                     last_t = timestamps[-idx]
 
-            if self.net == "VGG16":
-                dims = (214, 214)
-            elif self.net == "LeNet":
-                dims = (28, 28)
-            else:
-                print("No valid network to generate the dataset.")
-                sys.exit(0)
-
             for i in range(len(final_images)):
-                final_images[i] = cv2.resize(final_images[i], dims, interpolation=cv2.INTER_AREA)
+                final_images[i] = cv2.resize(final_images[i], self.image_size, interpolation=cv2.INTER_AREA)
 
             image = np.concatenate(final_images, axis=2)
-            image = np.transpose(image, (2, 0, 1))
+            # image = np.transpose(image, (2, 0, 1))
             self.images.append(image)
 
     def __len__(self):
@@ -98,7 +92,9 @@ class ImageDataset(Dataset):
         return image, label
 
     def get_dataset_name(self):
-        dataset_name = "dataset_images" + '_' + self.mode + '_net_' + self.net + '_s_' + str(self.limit) + '.hdf5'
+        i, j = self.image_size
+        dataset_name = "dataset_images" + '_' + self.mode + '_size_' + str(i) + "x" + str(j) + '_s_' + str(self.limit) \
+                       + '.hdf5'
         return dataset_name
 
     def save(self):
