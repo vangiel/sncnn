@@ -1,4 +1,6 @@
 import os
+import sys
+
 from data.base_dataset import BaseDataset, get_params, get_transform
 from data.image_folder import make_dataset
 from PIL import Image
@@ -42,8 +44,13 @@ class AlignedDataset(BaseDataset):
         # split AB image into A and B
         w, h = AB.size
         w2 = int(w / 2)
+        print(AB.size)
         A = AB.crop((0, 0, w2, h))
         B = AB.crop((w2, 0, w, h))
+        print(A.size)
+        print(B.size)
+
+        sys.exit(0)
 
         # apply the same transform to both A and B
         transform_params = get_params(self.opt, A.size)

@@ -1,4 +1,5 @@
 # sncnn
 Using a CNN for training on the SocNav2 dataset
 
-python train.py --dataroot ./datasets/horse2zebra --name horse2zebra --model cycle_gan --use_wandb
+python3 train.py --dataroot ./images_dataset --dataset_mode map --name map__pix2pix --model pix2pix --direction AtoB --input_nc 9 --output_nc 1
+
