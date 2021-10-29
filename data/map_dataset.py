@@ -22,7 +22,10 @@ class MapDataset(BaseDataset):
         self.image_size = (opt.crop_size, opt.crop_size)
         self.path_save = "cache"
         self.mode = opt.phase
-        self.limit = LIMIT
+        if self.mode == "test":
+            self.limit = 20
+        else:
+            self.limit = LIMIT
 
         self.input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
         self.output_nc = self.opt.input_nc if self.opt.direction == 'BtoA' else self.opt.output_nc
@@ -86,9 +89,10 @@ class MapDataset(BaseDataset):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
+        AB_path = self.img_dir
         image = self.images[idx]
         label = self.img_labels[idx]
-        return {'A': image, 'B': label, 'A_paths': self.img_dir, 'B_paths': self.img_dir}
+        return {'A': image, 'B': label, 'A_paths': AB_path, 'B_paths': AB_path}
 
     def get_dataset_name(self):
         i, j = self.image_size
