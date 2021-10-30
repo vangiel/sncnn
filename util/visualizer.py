@@ -37,6 +37,8 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, use_w
         im = util.tensor2im(im_data)
         image_name = '%s_%s.png' % (name, label)
         save_path = os.path.join(image_dir, image_name)
+        if label == 'real_A':
+            im = im[:, :, 0:3]
         util.save_image(im, save_path, aspect_ratio=aspect_ratio)
         ims.append(image_name)
         txts.append(label)

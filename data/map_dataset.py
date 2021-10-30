@@ -49,6 +49,7 @@ class MapDataset(BaseDataset):
             label_image = cv2.imread(str(file), 0)
             label_image = cv2.resize(label_image, self.image_size, interpolation=cv2.INTER_AREA)
             label_image = torch.from_numpy(label_image).type(torch.FloatTensor)
+            label_image = (label_image/255.)*2.-1.
             self.img_labels.append(label_image[None, :, :])
 
             video_path = self.img_dir + "/" + str(file).split("/")[1].split(".")[0].split("_")[0] + ".mp4"
@@ -83,6 +84,7 @@ class MapDataset(BaseDataset):
             image = np.concatenate(final_images, axis=2)
             image = np.transpose(image, (2, 0, 1))
             image = torch.from_numpy(image).type(torch.FloatTensor)
+            image = (image/255.)*2.-1.
             self.images.append(image)
 
     def __len__(self):
