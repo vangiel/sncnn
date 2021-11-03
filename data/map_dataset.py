@@ -18,6 +18,7 @@ class MapDataset(BaseDataset):
         BaseDataset.__init__(self, opt)
         self.img_labels = []
         self.images = []
+        self.names = []
         self.img_dir = opt.dataroot
         self.image_size = (opt.crop_size, opt.crop_size)
         self.path_save = "cache"
@@ -45,6 +46,8 @@ class MapDataset(BaseDataset):
             if index % 100 == 0:
                 print(index)
             index += 1
+
+            self.names.append(file)
 
             label_image = cv2.imread(str(file), 0)
             label_image = cv2.resize(label_image, self.image_size, interpolation=cv2.INTER_AREA)
@@ -91,7 +94,7 @@ class MapDataset(BaseDataset):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
-        AB_path = self.img_dir
+        AB_path = os.path.join(self.img_dir, self.names[idx])
         image = self.images[idx]
         label = self.img_labels[idx]
         return {'A': image, 'B': label, 'A_paths': AB_path, 'B_paths': AB_path}
