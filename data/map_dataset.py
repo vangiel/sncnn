@@ -23,13 +23,14 @@ class MapDataset(BaseDataset):
         self.image_size = (opt.crop_size, opt.crop_size)
         self.path_save = "cache"
         self.mode = opt.phase
+
+        self.input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
+        self.output_nc = self.opt.input_nc if self.opt.direction == 'BtoA' else self.opt.output_nc
+
         if self.mode == "test":
             self.limit = 20
         else:
             self.limit = LIMIT
-
-        self.input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
-        self.output_nc = self.opt.input_nc if self.opt.direction == 'BtoA' else self.opt.output_nc
 
         if self.has_cache():
             self.load()
@@ -39,7 +40,7 @@ class MapDataset(BaseDataset):
 
     def _load_data(self):
         index = 0
-        for file in Path(self.img_dir).glob('*.png'):
+        for file in Path(self.img_dir).glob('*.mp4'):
             if index > self.limit:
                 print("Stop loading data, limit reached")
                 break
@@ -47,15 +48,21 @@ class MapDataset(BaseDataset):
                 print(index)
             index += 1
 
+            name = str(file).split("/")[1].split(".")[0]
             self.names.append(file)
 
-            label_image = cv2.imread(str(file), 0)
-            label_image = cv2.resize(label_image, self.image_size, interpolation=cv2.INTER_AREA)
-            label_image = torch.from_numpy(label_image).type(torch.FloatTensor)
-            label_image = (label_image/255.)*2.-1.
-            self.img_labels.append(label_image[None, :, :])
+            label_file = self.img_dir + "/" + name + "__Q1" + ".png"
+            if os.path.isfile(label_file):
+                label_image = cv2.imread(str(label_file), 0)
+                label_image = cv2.resize(label_image, self.image_size, interpolation=cv2.INTER_AREA)
+                label_image = torch.from_numpy(label_image).type(torch.FloatTensor)
+                label_image = (label_image / 255.) * 2. - 1.
+                self.img_labels.append(label_image[None, :, :])
+            else:
+                self.img_labels.append(torch.from_numpy(np.array(0)).type(torch.FloatTensor))
 
-            video_path = self.img_dir + "/" + str(file).split("/")[1].split(".")[0].split("_")[0] + ".mp4"
+
+            video_path = str(file)
             # print("Loading ---> ", video_path)
             video = cv2.VideoCapture(video_path)
             fps = video.get(cv2.CAP_PROP_FPS)
