@@ -28,7 +28,7 @@ class MapDataset(BaseDataset):
         self.output_nc = self.opt.input_nc if self.opt.direction == 'BtoA' else self.opt.output_nc
 
         if self.mode == "test":
-            self.limit = 20
+            self.limit = LIMIT
         else:
             self.limit = LIMIT
 
@@ -84,7 +84,7 @@ class MapDataset(BaseDataset):
             for idx, frame in enumerate(reversed(frames), 1):
                 if len(final_images) >= 3:
                     break
-                if last_t - timestamps[-idx] >= 1000.0:
+                if idx == 11 or idx == 21:
                     final_images.append(frame)
                     last_t = timestamps[-idx]
 
